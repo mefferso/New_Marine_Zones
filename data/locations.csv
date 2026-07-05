@@ -9,7 +9,7 @@ add,Gulport - XGPT Weatherflow,mesonet,30.3597,-89.1095,GMZ532,,unreviewed,
 add,Biloxi - XBIX Weatherflow,mesonet,30.4350,-88.9769,GMZ532,,unreviewed,
 add,Ship Island - XSHI Weatherflow,mesonet,30.2308,-88.9816,GMZ532,,unreviewed,
 add,Bayou Bienvenue - XBYU Weatherflow,mesonet,30.0025,-89.9025,GMZ534,,unreviewed,
-add,SWBNO Pump station Bayou Sauvage - Weatherstem,mesonet,-30.0298,-89.8680,GMZ534,,unreviewed,CHECK LAT SIGN - likely should be positive
+add,SWBNO Pump station Bayou Sauvage - Weatherstem,mesonet,30.0298,-89.8680,GMZ534,,unreviewed,CHECK LAT SIGN - likely should be positive
 add,Venetian Isles NOFD Engine 31 - Weatherstem,mesonet,30.0654,-89.8136,GMZ534,,unreviewed,
 add,Muincipal Training Academy East - Weatherstem,mesonet,30.0173,-89.9280,GMZ534,,unreviewed,
 add,Chandeleur Sound,,29.9200,-89.1000,GMZ536,,unreviewed,
