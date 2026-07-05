@@ -1,0 +1,98 @@
+{
+  "generated_at_utc": "2026-07-05T16:50:54.900283+00:00",
+  "source_page": "https://www.weather.gov/gis/MarineZones",
+  "sources": {
+    "coastal_marine_zones_16ap26": {
+      "url": "https://www.weather.gov/source/gis/Shapefiles/WSOM/mz16ap26.zip",
+      "md5": "f191552ac0810b4bc4d11b46a87c2aeb",
+      "shapefile": {
+        "stem": "mz16ap26",
+        "feature_count": 569,
+        "fields": [
+          "ID",
+          "WFO",
+          "GL_WFO",
+          "NAME",
+          "LON",
+          "LAT"
+        ]
+      },
+      "kept_feature_ids": [
+        "GMZ529",
+        "GMZ531",
+        "GMZ532",
+        "GMZ533",
+        "GMZ534",
+        "GMZ535",
+        "GMZ536",
+        "GMZ541",
+        "GMZ543",
+        "GMZ551",
+        "GMZ553",
+        "GMZ554",
+        "GMZ557",
+        "GMZ570",
+        "GMZ572",
+        "GMZ575",
+        "GMZ577"
+      ]
+    },
+    "offshore_marine_zones_16ap26": {
+      "url": "https://www.weather.gov/source/gis/Shapefiles/WSOM/oz16ap26.zip",
+      "md5": "aa39c4bca11fcb4d949078cef292fd7d",
+      "shapefile": {
+        "stem": "oz16ap26",
+        "feature_count": 130,
+        "fields": [
+          "ID",
+          "WFO",
+          "LON",
+          "LAT",
+          "LOCATION",
+          "NAME"
+        ]
+      },
+      "kept_feature_ids": []
+    }
+  },
+  "target_ids": [
+    "GMZ529",
+    "GMZ531",
+    "GMZ532",
+    "GMZ533",
+    "GMZ534",
+    "GMZ535",
+    "GMZ536",
+    "GMZ541",
+    "GMZ543",
+    "GMZ551",
+    "GMZ553",
+    "GMZ554",
+    "GMZ557",
+    "GMZ570",
+    "GMZ572",
+    "GMZ575",
+    "GMZ577"
+  ],
+  "output_feature_ids": [
+    "GMZ529",
+    "GMZ531",
+    "GMZ532",
+    "GMZ533",
+    "GMZ534",
+    "GMZ535",
+    "GMZ536",
+    "GMZ541",
+    "GMZ543",
+    "GMZ551",
+    "GMZ553",
+    "GMZ554",
+    "GMZ557",
+    "GMZ570",
+    "GMZ572",
+    "GMZ575",
+    "GMZ577"
+  ],
+  "missing_target_ids": [],
+  "output_feature_count": 17
+}
