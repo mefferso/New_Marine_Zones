@@ -8,6 +8,7 @@ let zoneGeojson = null;
 let zoneLayer = null;
 let markerLayer = L.layerGroup();
 let selectedMarker = null;
+let cursorReadoutEl = null;
 
 const statusEl = document.getElementById("status");
 const selectedEl = document.getElementById("selectedPoint");
@@ -24,6 +25,20 @@ async function init() {
   }).addTo(map);
 
   markerLayer.addTo(map);
+  addCursorReadoutControl();
+
+  map.on("mousemove", (evt) => {
+    updateCursorReadout(evt.latlng);
+  });
+
+  map.on("mouseout", () => {
+    if (cursorReadoutEl) {
+      cursorReadoutEl.innerHTML = `
+        <div class="cursor-title">Cursor Location</div>
+        <div class="cursor-muted">Move over the map for live lat/lon.</div>
+      `;
+    }
+  });
 
   map.on("click", (evt) => {
     openNewPointPopup(evt.latlng);
@@ -35,6 +50,41 @@ async function init() {
   document.getElementById("exportWorkingCsv").addEventListener("click", exportWorkingCsv);
 
   await loadDefaultFiles();
+}
+
+function addCursorReadoutControl() {
+  const CursorControl = L.Control.extend({
+    options: { position: "bottomleft" },
+    onAdd: function () {
+      const div = L.DomUtil.create("div", "cursor-readout leaflet-control");
+      div.innerHTML = `
+        <div class="cursor-title">Cursor Location</div>
+        <div class="cursor-muted">Move over the map for live lat/lon.</div>
+      `;
+      L.DomEvent.disableClickPropagation(div);
+      L.DomEvent.disableScrollPropagation(div);
+      cursorReadoutEl = div;
+      return div;
+    }
+  });
+  map.addControl(new CursorControl());
+}
+
+function updateCursorReadout(latlng) {
+  if (!cursorReadoutEl) return;
+
+  const zone = getZoneFeatureForLatLng(latlng);
+  const zoneId = zone ? getZoneId(zone) : "NO_ZONE";
+  const zoneName = zone ? getZoneName(zone) : "Outside loaded zones";
+
+  cursorReadoutEl.innerHTML = `
+    <div class="cursor-title">Cursor Location</div>
+    <div><b>Lat:</b> ${latlng.lat.toFixed(5)}</div>
+    <div><b>Lon:</b> ${latlng.lng.toFixed(5)}</div>
+    <div><b>Zone:</b> ${escapeHtml(zoneId)}</div>
+    <div class="cursor-muted">${escapeHtml(zoneName || "")}</div>
+    <div class="cursor-hint">Click map to add a point here.</div>
+  `;
 }
 
 async function loadDefaultFiles() {
@@ -196,6 +246,21 @@ function getZoneName(feature) {
   return props.NAME || props.name || props.Name || props.ZONE_NAME || props.MARINE_ZONE || "";
 }
 
+function getZoneFeatureForLatLng(latlng) {
+  if (!zoneGeojson?.features?.length) return null;
+
+  const pt = turf.point([latlng.lng, latlng.lat]);
+  for (const feature of zoneGeojson.features) {
+    if (!feature.geometry) continue;
+    try {
+      if (turf.booleanPointInPolygon(pt, feature, { ignoreBoundary: false })) {
+        return feature;
+      }
+    } catch (_) {}
+  }
+  return null;
+}
+
 function zoneColor(zoneId) {
   const palette = ["#fde047", "#22c55e", "#a855f7", "#3b82f6", "#f97316", "#14b8a6", "#ef4444", "#84cc16"];
   const num = Number((zoneId || "").replace(/\D/g, "")) || 0;
@@ -223,18 +288,7 @@ function assignZoneToPoint(p) {
     return;
   }
 
-  const pt = turf.point([p.lon, p.lat]);
-  let found = null;
-
-  for (const feature of zoneGeojson.features) {
-    if (!feature.geometry) continue;
-    try {
-      if (turf.booleanPointInPolygon(pt, feature, { ignoreBoundary: false })) {
-        found = feature;
-        break;
-      }
-    } catch (_) {}
-  }
+  const found = getZoneFeatureForLatLng({ lat: p.lat, lng: p.lon });
 
   if (found) {
     p.new_gmz = getZoneId(found);
@@ -245,6 +299,7 @@ function assignZoneToPoint(p) {
     p.problem = p.problem ? `${p.problem}; Outside all loaded zones` : "Outside all loaded zones";
   }
 
+  const pt = turf.point([p.lon, p.lat]);
   const d = distanceToNearestBoundaryMiles(pt);
   if (Number.isFinite(d)) {
     p.near_boundary_miles = d.toFixed(2);
@@ -417,7 +472,7 @@ function openNewPointPopup(latlng) {
     .setContent(`
       <div class="popup-form">
         <p><b>Add new point here?</b></p>
-        <p>${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}</p>
+        <p>Lat/Lon: ${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}</p>
         <p>Assigned zone: <b>${escapeHtml(p.new_gmz || "none")}</b></p>
         <button id="confirmAddPoint">Add point</button>
       </div>
