@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>New Marine Zones - Storm Data Location QC</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div>
+      <h1>New Marine Zones</h1>
+      <p>Storm Data predefined location review and CSV export</p>
+    </div>
+    <div class="toolbar">
+      <label class="button file-button">
+        Load Zone GeoJSON
+        <input id="geojsonFile" type="file" accept=".geojson,.json" />
+      </label>
+      <label class="button file-button">
+        Load Location CSV
+        <input id="csvFile" type="file" accept=".csv" />
+      </label>
+      <button id="exportCsv">Export Supervisor CSV</button>
+      <button id="exportWorkingCsv">Export Working CSV</button>
+    </div>
+  </header>
+
+  <main>
+    <aside id="sidebar">
+      <section class="card">
+        <h2>Status</h2>
+        <div id="status">Loading default files...</div>
+      </section>
+
+      <section class="card">
+        <h2>Selected Point</h2>
+        <div id="selectedPoint">Click a marker, or click the map to add a new point.</div>
+      </section>
+
+      <section class="card">
+        <h2>Zone Summary</h2>
+        <div id="zoneSummary">Load zones and points to populate this.</div>
+      </section>
+
+      <section class="card small-text">
+        <h2>How to use</h2>
+        <ol>
+          <li>Load the April 2026 marine zone GeoJSON if it is not already in the repo.</li>
+          <li>Review colored points and questionable locations.</li>
+          <li>Click the map to add a point. Drag markers to adjust.</li>
+          <li>Export the supervisor CSV when done.</li>
+        </ol>
+      </section>
+    </aside>
+
+    <section id="map"></section>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+  <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+  <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
