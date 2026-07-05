@@ -1,0 +1,28 @@
+.badge.reviewed { background: #dcfce7; }
+
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0.25rem 0;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 999px;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.25);
+}
+
+.legend-dot.reviewed { background: #16a34a; }
+.legend-dot.problem { background: #dc2626; }
+.legend-dot.change { background: #f59e0b; }
+.legend-dot.keep { background: #2563eb; }
+.legend-dot.add { background: #6b7280; }
+
+.legend-note {
+  margin-top: 0.4rem;
+  font-size: 0.78rem;
+}
