@@ -66,3 +66,69 @@ window.addEventListener("load", () => {
   injectColorLegend();
   if (typeof renderMarkers === "function") renderMarkers();
 });
+
+// Persist review status in this browser so reviewed dots remain green after a reload.
+// The key is captured from the source CSV values and stays stable even if the point is edited later.
+const REVIEW_STATUS_STORAGE_KEY = "new-marine-zones-review-status-v1";
+const originalLoadCsvText = loadCsvText;
+const originalWirePopupForm = wirePopupForm;
+
+function reviewPointStorageKey(p) {
+  return [
+    String(p.name || "").trim().toLowerCase(),
+    String(p.station_type || "").trim().toLowerCase(),
+    Number(p.lat).toFixed(5),
+    Number(p.lon).toFixed(5),
+    String(p.old_gmz || "").trim().toUpperCase()
+  ].join("|");
+}
+
+function readSavedReviewStatuses() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(REVIEW_STATUS_STORAGE_KEY) || "{}");
+    return saved && typeof saved === "object" && !Array.isArray(saved) ? saved : {};
+  } catch (_) {
+    return {};
+  }
+}
+
+function saveReviewStatus(p) {
+  if (!p._reviewStorageKey) return;
+
+  try {
+    const saved = readSavedReviewStatuses();
+    if (p.review_status && p.review_status !== "unreviewed") {
+      saved[p._reviewStorageKey] = p.review_status;
+    } else {
+      delete saved[p._reviewStorageKey];
+    }
+    localStorage.setItem(REVIEW_STATUS_STORAGE_KEY, JSON.stringify(saved));
+  } catch (_) {
+    // The page still works normally if browser storage is unavailable.
+  }
+}
+
+loadCsvText = function loadCsvTextWithSavedReviewStatus(csvText) {
+  originalLoadCsvText(csvText);
+  const saved = readSavedReviewStatuses();
+
+  points.forEach(p => {
+    p._reviewStorageKey = reviewPointStorageKey(p);
+    if (saved[p._reviewStorageKey]) {
+      p.review_status = saved[p._reviewStorageKey];
+    }
+  });
+};
+
+wirePopupForm = function wirePopupFormWithSavedReviewStatus(marker, p) {
+  originalWirePopupForm(marker, p);
+
+  const el = marker.getPopup().getElement();
+  const form = el?.querySelector("form.popup-form");
+  if (!form) return;
+
+  form.addEventListener("submit", () => {
+    saveReviewStatus(p);
+  });
+};
+
