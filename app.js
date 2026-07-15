@@ -544,15 +544,148 @@ function updateZoneSummary() {
 }
 
 function exportSupervisorCsv() {
-  const rows = points.map(p => ({
-    "Station Name": p.name,
-    "New GM-Zone": p.new_gmz,
-    "Old GM zone": p.old_gmz,
-    "lat": roundCoord(p.lat),
-    "lon": roundCoord(p.lon),
-    "station type": p.station_type
-  }));
-  downloadCsv(rows, "supervisor_final_locations.csv");
+  if (typeof XLSX === "undefined") {
+    alert("The Excel export library did not load. Refresh the page and try again.");
+    return;
+  }
+
+  const headers = [
+    "Station Name",
+    "New GM-Zone",
+    "Old GM zone",
+    "lat",
+    "lon",
+    "station type"
+  ];
+
+  const dataRows = points.map(p => [
+    p.name,
+    p.new_gmz,
+    p.old_gmz,
+    Number(p.lat),
+    Number(p.lon),
+    p.station_type
+  ]);
+
+  const generated = new Date().toLocaleString();
+  const worksheetData = [
+    ["NWS Storm Data – Marine Zone Location Updates", "", "", "", "", ""],
+    [`Supervisor Final • ${points.length} locations • Generated ${generated}`, "", "", "", "", ""],
+    ["", "", "", "", "", ""],
+    headers,
+    ...dataRows
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(worksheetData);
+  const lastRow = worksheetData.length;
+  const borderColor = { rgb: "FFD9E2F3" };
+  const bodyFont = { name: "Aptos", sz: 11, color: { rgb: "FF1F2937" } };
+
+  ws["!merges"] = [
+    XLSX.utils.decode_range("A1:F1"),
+    XLSX.utils.decode_range("A2:F2")
+  ];
+
+  ws["!cols"] = [
+    { wch: 48 },
+    { wch: 16 },
+    { wch: 16 },
+    { wch: 13 },
+    { wch: 13 },
+    { wch: 18 }
+  ];
+
+  ws["!rows"] = [
+    { hpt: 29 },
+    { hpt: 21 },
+    { hpt: 8 },
+    { hpt: 25 },
+    ...dataRows.map(() => ({ hpt: 20 }))
+  ];
+
+  ws["!autofilter"] = { ref: `A4:F${Math.max(4, lastRow)}` };
+  ws["!freeze"] = {
+    xSplit: 0,
+    ySplit: 4,
+    topLeftCell: "A5",
+    activePane: "bottomLeft",
+    state: "frozen"
+  };
+
+  ws.A1.s = {
+    fill: { patternType: "solid", fgColor: { rgb: "FF1F4E78" } },
+    font: { name: "Aptos Display", sz: 17, bold: true, color: { rgb: "FFFFFFFF" } },
+    alignment: { horizontal: "left", vertical: "center" }
+  };
+
+  ws.A2.s = {
+    fill: { patternType: "solid", fgColor: { rgb: "FFD9EAF7" } },
+    font: { name: "Aptos", sz: 10, italic: true, color: { rgb: "FF365F7D" } },
+    alignment: { horizontal: "left", vertical: "center" }
+  };
+
+  for (let col = 0; col < headers.length; col++) {
+    const cell = ws[XLSX.utils.encode_cell({ r: 3, c: col })];
+    cell.s = {
+      fill: { patternType: "solid", fgColor: { rgb: "FF4472C4" } },
+      font: { name: "Aptos", sz: 11, bold: true, color: { rgb: "FFFFFFFF" } },
+      alignment: { horizontal: col === 0 ? "left" : "center", vertical: "center" },
+      border: {
+        bottom: { style: "medium", color: { rgb: "FF1F4E78" } }
+      }
+    };
+  }
+
+  for (let row = 4; row < lastRow; row++) {
+    const fillColor = row % 2 === 0 ? "FFF4F7FB" : "FFFFFFFF";
+
+    for (let col = 0; col < headers.length; col++) {
+      const cell = ws[XLSX.utils.encode_cell({ r: row, c: col })];
+      if (!cell) continue;
+
+      cell.s = {
+        fill: { patternType: "solid", fgColor: { rgb: fillColor } },
+        font: bodyFont,
+        alignment: {
+          horizontal: col === 0 ? "left" : (col >= 3 && col <= 4 ? "right" : "center"),
+          vertical: "center"
+        },
+        border: {
+          bottom: { style: "thin", color: borderColor }
+        }
+      };
+
+      if (col === 3 || col === 4) {
+        cell.s.numFmt = "0.00000";
+      }
+    }
+
+    const newZoneCell = ws[XLSX.utils.encode_cell({ r: row, c: 1 })];
+    const oldZoneCell = ws[XLSX.utils.encode_cell({ r: row, c: 2 })];
+
+    if (
+      newZoneCell &&
+      oldZoneCell &&
+      String(newZoneCell.v || "") !== String(oldZoneCell.v || "")
+    ) {
+      newZoneCell.s.fill = { patternType: "solid", fgColor: { rgb: "FFFFE699" } };
+      newZoneCell.s.font = {
+        name: "Aptos",
+        sz: 11,
+        bold: true,
+        color: { rgb: "FF7F6000" }
+      };
+    }
+  }
+
+  const wb = XLSX.utils.book_new();
+  wb.Props = {
+    Title: "NWS Storm Data Marine Zone Location Updates",
+    Subject: "Supervisor final predefined marine locations",
+    Author: "WFO New Orleans/Baton Rouge"
+  };
+  XLSX.utils.book_append_sheet(wb, ws, "Marine Locations");
+  XLSX.writeFile(wb, "NWS_Storm_Data_Marine_Locations.xlsx", { compression: true });
 }
 
 function exportWorkingCsv() {
