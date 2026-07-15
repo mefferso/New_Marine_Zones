@@ -131,6 +131,7 @@ function saveWorkingPoints() {
       lon: p.lon,
       old_gmz: p.old_gmz,
       new_gmz: p.new_gmz,
+      manual_new_gmz: p.manual_new_gmz || "",
       review_status: p.review_status,
       notes: p.notes
     }));
