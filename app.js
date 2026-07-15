@@ -179,6 +179,7 @@ function normalizePoint(row, idx) {
     lon: Number(row.lon || row.lng || row.longitude),
     old_gmz: gmz,
     new_gmz: cleanGmz(row.new_gmz || row.proposed_gmz || ""),
+    manual_new_gmz: cleanGmz(row.manual_new_gmz || row.new_gmz_override || row.new_gmz || row.proposed_gmz || ""),
     review_status: (row.review_status || "unreviewed").trim(),
     notes: (row.notes || "").trim(),
     assigned_zone_name: "",
@@ -307,6 +308,11 @@ function assignZoneToPoint(p) {
       p.problem = p.problem ? `${p.problem}; within ${BOUNDARY_REVIEW_MILES} mi of boundary` : `Within ${BOUNDARY_REVIEW_MILES} mi of boundary`;
     }
   }
+
+  // A manually saved GMZ takes precedence over the polygon-derived assignment.
+  if (p.manual_new_gmz) {
+    p.new_gmz = cleanGmz(p.manual_new_gmz);
+  }
 }
 
 function distanceToNearestBoundaryMiles(pt) {
@@ -430,7 +436,7 @@ function wirePopupForm(marker, p) {
     p.station_type = data.get("station_type").trim();
     p.action = cleanAction(data.get("action"));
     p.old_gmz = cleanGmz(data.get("old_gmz"));
-    p.new_gmz = cleanGmz(data.get("new_gmz"));
+    p.manual_new_gmz = cleanGmz(data.get("new_gmz"));
     p.review_status = data.get("review_status").trim();
     p.notes = data.get("notes").trim();
     assignZoneToPoint(p);
@@ -459,6 +465,7 @@ function openNewPointPopup(latlng) {
     lon: latlng.lng,
     old_gmz: "",
     new_gmz: "",
+    manual_new_gmz: "",
     review_status: "unreviewed",
     notes: "",
     assigned_zone_name: "",
