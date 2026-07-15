@@ -108,19 +108,64 @@ function saveReviewStatus(p) {
   }
 }
 
-loadCsvText = function loadCsvTextWithSavedReviewStatus(csvText) {
-  originalLoadCsvText(csvText);
-  const saved = readSavedReviewStatuses();
+const WORKING_POINTS_STORAGE_KEY = "new-marine-zones-working-points-v1";
+let restoredWorkingPoints = false;
 
+function readSavedWorkingPoints() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(WORKING_POINTS_STORAGE_KEY) || "null");
+    return Array.isArray(saved) ? saved : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function saveWorkingPoints() {
+  try {
+    const saved = points.map(p => ({
+      id: p.id,
+      action: p.action,
+      name: p.name,
+      station_type: p.station_type,
+      lat: p.lat,
+      lon: p.lon,
+      old_gmz: p.old_gmz,
+      new_gmz: p.new_gmz,
+      review_status: p.review_status,
+      notes: p.notes
+    }));
+    localStorage.setItem(WORKING_POINTS_STORAGE_KEY, JSON.stringify(saved));
+  } catch (_) {
+    // The page still works normally if browser storage is unavailable.
+  }
+}
+
+loadCsvText = function loadCsvTextWithSavedWorkingState(csvText) {
+  originalLoadCsvText(csvText);
+
+  if (!restoredWorkingPoints) {
+    const savedPoints = readSavedWorkingPoints();
+    if (savedPoints !== null) {
+      points = savedPoints
+        .map((row, idx) => normalizePoint(row, idx))
+        .filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lon));
+    }
+    restoredWorkingPoints = true;
+  } else {
+    // An explicitly uploaded CSV becomes the new saved working state.
+    saveWorkingPoints();
+  }
+
+  const savedStatuses = readSavedReviewStatuses();
   points.forEach(p => {
     p._reviewStorageKey = reviewPointStorageKey(p);
-    if (saved[p._reviewStorageKey]) {
-      p.review_status = saved[p._reviewStorageKey];
+    if (savedStatuses[p._reviewStorageKey]) {
+      p.review_status = savedStatuses[p._reviewStorageKey];
     }
   });
 };
 
-wirePopupForm = function wirePopupFormWithSavedReviewStatus(marker, p) {
+wirePopupForm = function wirePopupFormWithSavedWorkingState(marker, p) {
   originalWirePopupForm(marker, p);
 
   const el = marker.getPopup().getElement();
@@ -129,6 +174,34 @@ wirePopupForm = function wirePopupFormWithSavedReviewStatus(marker, p) {
 
   form.addEventListener("submit", () => {
     saveReviewStatus(p);
+    saveWorkingPoints();
+  });
+};
+
+// Additions and deletions happen in app.js button handlers. Save after those handlers finish.
+document.addEventListener("click", evt => {
+  if (!evt.target.closest?.("#confirmAddPoint, .delete-point")) return;
+  setTimeout(saveWorkingPoints, 0);
+});
+
+// Preserve coordinate changes made with the draggable editing marker.
+makePointDraggable = function makePointDraggableWithSavedWorkingState(p) {
+  const marker = L.marker([p.lat, p.lon], { draggable: true }).addTo(map);
+  marker.bindTooltip("Drag me, then release to update point", {
+    permanent: true,
+    direction: "top"
+  }).openTooltip();
+
+  marker.on("dragend", () => {
+    const ll = marker.getLatLng();
+    p.lat = ll.lat;
+    p.lon = ll.lng;
+    assignZoneToPoint(p);
+    map.removeLayer(marker);
+    renderMarkers();
+    updateZoneSummary();
+    selectPoint(p.id);
+    saveWorkingPoints();
   });
 };
 
