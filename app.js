@@ -544,14 +544,17 @@ function updateZoneSummary() {
 }
 
 function exportSupervisorCsv() {
-  const rows = points.map(p => ({
-    "Station Name": p.name,
-    "New GM-Zone": p.new_gmz,
-    "Old GM zone": p.old_gmz,
-    "lat": roundCoord(p.lat),
-    "lon": roundCoord(p.lon),
-    "station type": p.station_type
-  }));
+  const rows = points
+    .filter(p => p.action === "add" || p.action === "change")
+    .map(p => ({
+      "Requested Update": p.action === "add" ? "ADD LOCATION" : "CHANGE GM-ZONE",
+      "Station Name": p.name,
+      "Current GM-Zone": p.action === "add" ? "" : p.old_gmz,
+      "Requested GM-Zone": p.new_gmz || p.old_gmz || "",
+      "Latitude": roundCoord(p.lat),
+      "Longitude": roundCoord(p.lon),
+      "Station Type": p.station_type
+    }));
   downloadCsv(rows, "supervisor_final_locations.csv");
 }
 
