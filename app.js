@@ -538,15 +538,12 @@ function updateZoneSummary() {
 
 function exportSupervisorCsv() {
   const rows = points.map(p => ({
-    "GM-Zone": p.new_gmz || p.old_gmz || "",
-    "Name": p.name,
-    "Station Type": p.station_type,
+    "Station Name": p.name,
+    "New GM-Zone": p.new_gmz,
+    "Old GM zone": p.old_gmz,
     "lat": roundCoord(p.lat),
     "lon": roundCoord(p.lon),
-    "Action": p.action,
-    "Review Status": p.review_status,
-    "Old GM-Zone": p.old_gmz,
-    "Notes": buildNotes(p)
+    "station type": p.station_type
   }));
   downloadCsv(rows, "supervisor_final_locations.csv");
 }
